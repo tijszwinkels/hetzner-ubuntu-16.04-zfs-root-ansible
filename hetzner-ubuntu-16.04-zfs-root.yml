@@ -1,0 +1,8 @@
+# From hetzner rescue system to ubuntu 16.04 on ZFS root.
+#
+# Assumes a system with 2 sata devices on sda and sdb
+#
+# BEWARE: Disks will be wiped.
+
+- include: hetzner-ubuntu-16.04.yml
+- include: ubuntu-16.04-to-zfs-root.yml

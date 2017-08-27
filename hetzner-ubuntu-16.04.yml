@@ -1,0 +1,24 @@
+- hosts: ubuntu-zfs-root 
+  remote_user: root
+  tasks:
+
+    # Destroy any existing partition tables and such.
+#  - name: Shred existing block devices.
+#    raw: shred --size=4M  /dev/sda* /dev/sdb*
+
+    # Secure-erase the SSDs 
+  - name: TRIM sda
+    command: /sbin/blkdiscard /dev/sda
+  - name: TRIM sdb 
+    command: /sbin/blkdiscard /dev/sdb
+
+    # Install ubuntu 16.04 with the hetzner installimage script
+  - name: Install ubuntu 16.04
+    command: /root/.oldroot/nfs/install/installimage -a -n "{{ inventory_hostname_short }}" -r yes -l 1 -p /:ext4:4G -K /root/.ssh/robot_user_keys -i /root/.oldroot/nfs/install/../images/Ubuntu-1604-xenial-64-minimal.tar.gz
+
+  - name: Reboot the System
+    command: /sbin/shutdown -r now "Boot into installed ubuntu" && sleep 1
+
+  - name: Wait for system to come back up.
+    local_action: wait_for host={{ ansible_default_ipv4.address }} port=22 state=started delay=30 timeout=60
+    sudo: false

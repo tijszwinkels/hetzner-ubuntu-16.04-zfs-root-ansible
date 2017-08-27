@@ -1,0 +1,58 @@
+- hosts: ubuntu-zfs-root 
+  remote_user: root
+  gather_facts: False
+
+  tasks:
+
+  # Install some required packages.
+  - name: "Install some required packages."
+    raw: apt-get update && apt-get install -y parted python-minimal
+
+  # Create a second partition for ZFS
+  - parted:
+      device: /dev/sda
+      number: 2
+      state: present 
+      part_start: 4097MiB
+  - parted:
+      device: /dev/sdb
+      number: 2
+      state: present 
+      part_start: 4097MiB
+
+  # Install ZFS packages
+  - apt:
+      name: zfs-dkms
+      state: present
+  - apt:
+      name: zfs-initramfs
+      state: present
+
+  # Create ZFS pool
+  - name: "Create ZPool named 'tank'" 
+    raw: zpool create -f -o ashift=13 -O atime=off -O dedup=off -O compression=lz4  tank mirror `ls /dev/disk/by-id/ata-*-part2` 
+
+  # Create OS partiton
+  - name: "Create OS zfs dataset tank/os"
+    raw: zfs create tank/os
+  #- zfs:
+  #  name: tank/os
+  #  state: present
+
+  # Rsync the current system to the new partition.
+  - name: "Rsync the current system to the new partition"
+    raw: 'rsync -a --one-file-system / /tank/os/'
+
+  # Make the system bootable
+  - name: "Make the system bootable"
+    raw: 'cd /tank/os && mount --bind /dev dev && mount --bind /proc proc && mount --bind /sys sys && mount --bind /run run && /usr/sbin/chroot . /bin/bash -c "export ZPOOL_VDEV_NAME_PATH=YES && /usr/sbin/update-grub && /usr/sbin/grub-install /dev/sda && /usr/sbin/grub-install /dev/sdb" && umount dev && umount proc && umount sys && umount run'
+
+  # Reboot the system
+  - name: Reboot the System
+    command: /sbin/shutdown -r now "Reboot into ZFS Root" && sleep 1
+
+  # Wait for the system to come back up
+  - name: Wait for system to come back up.
+    local_action: wait_for host={{ ansible_default_ipv4.address }} port=22 state=started delay=30 timeout=60
+    sudo: false 
+  
