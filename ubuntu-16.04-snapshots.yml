@@ -1,0 +1,20 @@
+- hosts: ubuntu-zfs-root 
+  remote_user: root
+  gather_facts: False
+
+  tasks:
+
+  # Install some required packages.
+  - name: "Install some required packages."
+    raw: apt-get update && apt-get install -y parted python-minimal
+
+  - apt:
+      name: git
+      state: present
+
+  - git:
+      repo: 'https://github.com/zfsonlinux/zfs-auto-snapshot'
+      dest: /tmp/zfs-auto-snapshot
+
+  - name: "Install zfs-auto-snapshot"
+    raw: 'cd /tmp/zfs-auto-snapshot && make install && cd - && rm -r /tmp/zfs-auto-snapshot'
