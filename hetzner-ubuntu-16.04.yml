@@ -11,6 +11,10 @@
     command: /sbin/blkdiscard /dev/sda
   - name: TRIM sdb 
     command: /sbin/blkdiscard /dev/sdb
+  - name: TRIM sdc
+    command: /sbin/blkdiscard /dev/sdc
+  - name: TRIM sdd 
+    command: /sbin/blkdiscard /dev/sdd
 
     # Install ubuntu 16.04 with the hetzner installimage script
   - name: Install ubuntu 16.04

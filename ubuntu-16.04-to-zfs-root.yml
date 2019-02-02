@@ -18,7 +18,18 @@
       device: /dev/sdb
       number: 2
       state: present 
+   - parted:
+      device: /dev/sdc
+      number: 2
+      state: present 
       part_start: 4097MiB
+  - parted:
+      device: /dev/sdd
+      number: 2
+      state: present 
+      part_start: 4097MiB
+
+   part_start: 4097MiB
 
   # Install ZFS packages
   - apt:
@@ -30,7 +41,7 @@
 
   # Create ZFS pool
   - name: "Create ZPool named 'tank'" 
-    raw: zpool create -f -o ashift=13 -O atime=off -O dedup=off -O compression=lz4  tank mirror `ls /dev/disk/by-id/ata-*-part2` 
+    raw: zpool create -f -o ashift=13 -O atime=off -O dedup=off -O compression=lz4  tank raidz `ls /dev/disk/by-id/ata-*-part2` 
 
   # Create OS partiton
   - name: "Create OS zfs dataset tank/os"
